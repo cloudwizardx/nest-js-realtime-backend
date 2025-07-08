@@ -1,0 +1,14 @@
+services:
+  dev-database:
+    image: mongo:latest
+    container_name: dev-database
+    ports:
+      - 27018:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: guest
+      MONGO_INITDB_ROOT_PASSWORD: 12345
+      MONGO_INITDB_DATABASE: fertility_care_chatting
+    networks:
+      - fcc-network
+networks:
+  fcc-network:
