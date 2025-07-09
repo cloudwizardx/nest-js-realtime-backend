@@ -1,16 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-interface WsClient {
-  data: {
-    user: unknown;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
-
 export const CurrentUser = createParamDecorator(
-  (data: string, ctx: ExecutionContext) => {
-    const client = ctx.switchToWs().getClient<WsClient>();
+  (data: unknown, ctx: ExecutionContext) => {
+    const client = ctx.switchToWs().getClient();
     return client.data.user;
-  }
+  },
 );
