@@ -32,8 +32,8 @@ export class Message extends Document {
     @Prop({required: true})
     conversationId: string
 
-    @Prop({default: 'Sent', enum: ['Sent', 'Delivered', 'Seen']})
-    status: 'Sent' | 'Delivered' | 'Seen'
+    @Prop({default: 'Sent', enum: ['Sent', 'Uploading', 'Delivered', 'Seen']})
+    status: string
 
     @Prop([Attachment])
     attachments: Attachment[]
@@ -55,15 +55,6 @@ export class Conversation extends Document {
 
     @Prop({default: Date.now})
     lastMessageTime: Date
-
-    @Prop({type: {
-        user1: {type: Number, default: 0},
-        user2: {type: Number, default: 0}
-    }})
-    unreadCount: {
-        user1: number,
-        user2: number
-    }
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message) // return Mongoose.schema

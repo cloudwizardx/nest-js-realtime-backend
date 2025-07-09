@@ -1,4 +1,6 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { Attachment } from '../chat.schema';
+import { Type } from "class-transformer";
 
 export class SendMessageRequest {
     @IsString()
@@ -12,9 +14,6 @@ export class SendMessageRequest {
 
     @IsOptional()
     @IsArray()
-    attachments?: {
-        url: string
-        fileName: string
-        type: string
-    }
+    @Type(() => Attachment)
+    attachments?: Attachment[] 
 }

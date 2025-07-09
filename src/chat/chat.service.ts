@@ -3,9 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './chat.schema';
 import { Model } from 'mongoose';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SendMessageRequest } from './dto';
-import { UserRole } from '../common';
-import { timestamp } from 'rxjs';
+import { SendMessageRequest, UpdateConversationRequest } from './dto';
+import { MessageStatus } from 'src/common/message.status';
 
 @Injectable()
 export class ChatService {
@@ -16,37 +15,59 @@ export class ChatService {
     ) { }
 
     sendMessage = async (senderId: string, senderRole: string, messageRequest: SendMessageRequest) => {
-        const { receiverId, content, attachments } = messageRequest
+        const { receiverId, content } = messageRequest
 
-        const conversationId: string = this.generateConversationObjectId(senderId, receiverId, senderRole)
+        const cId: string = this.generateConversationId(senderId, receiverId)
 
         const message = new this.messageModel({
-            senderId,
-            senderRole,
-            receiverId,
-            content,
-            conversationId,
-            attachments: attachments || [],
-            timestamp: new Date(),
-            status: 'Sent'
+            senderId: senderId,
+            senderRole: senderRole,
+            receiverId: receiverId,
+            status: MessageStatus.Uploading,
+            attachments: [],
+            conversationId: cId,
+            content: content,
+            timestamp: new Date()
         })
 
         const savedMessage = await message.save();
+        await this.updateConversation({
+            senderId: senderId,
+            senderRole: senderRole,
+            receiverId: receiverId,
+            lastMessage: content,
+            conversationId: cId
+        })
         
         return savedMessage
     }
 
-    generateConversationObjectId = (senderId: string, receiverId: string, senderRole: string): string => {
-        switch (senderRole) {
-            case UserRole.Doctor.toString():
-                return `D_${senderId}_${receiverId}`
-            case UserRole.Manager.toString():
-                return `M_${senderId}_${receiverId}`
-            case UserRole.Admin.toString():
-                return `A_${senderId}_${receiverId}`
-            default: 
-                return `U_${senderId}_${receiverId}`
+    private async updateConversation(messageRequest: UpdateConversationRequest) {
+        const { conversationId, lastMessage, senderId, receiverId } = messageRequest
+
+        const loadedConversation = await this.conversationModel.findOne({ conversationId })
+
+        if (!loadedConversation) {
+            const conversation = new this.conversationModel({
+                conversationId: conversationId,
+                userId1: senderId,
+                userId2: receiverId,
+                lastMessage: lastMessage,
+                lastMessageTime: new Date()
+            })
+
+            await conversation.save();
+        } else {
+            loadedConversation.lastMessage = lastMessage
+            loadedConversation.lastMessageTime = new Date()
+
+            await loadedConversation.save();
         }
+    }
+
+    generateConversationId = (userId1: string, userId2: string): string => {
+        const sorted = [userId1, userId2].sort();
+        return `${sorted[0]}_${sorted[1]}`;
     }
 
 }
