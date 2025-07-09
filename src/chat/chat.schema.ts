@@ -1,4 +1,4 @@
-import { Prop, Schema } from "@nestjs/mongoose"
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
 
 @Schema()
 export class Attachment {
@@ -66,5 +66,7 @@ export class Conversation extends Document {
     }
 }
 
+export const MessageSchema = SchemaFactory.createForClass(Message)
+export const ConversationSchema = SchemaFactory.createForClass(Conversation)
 
 
