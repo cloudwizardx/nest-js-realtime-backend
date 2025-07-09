@@ -66,7 +66,7 @@ export class Conversation extends Document {
     }
 }
 
-export const MessageSchema = SchemaFactory.createForClass(Message)
+export const MessageSchema = SchemaFactory.createForClass(Message) // return Mongoose.schema
 export const ConversationSchema = SchemaFactory.createForClass(Conversation)
 
 
