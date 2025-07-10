@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './chat.schema';
 import { Model } from 'mongoose';
@@ -113,4 +113,19 @@ export class ChatService {
             messages,
         }
     }
+
+    updateMessageStatus = async (messageId: string, status: string) => {
+        const message = await this.messageModel.findByIdAndUpdate(
+            messageId,
+            { status }, 
+            { new: true } // return document after update
+        );
+
+        if (!message) {
+            throw new NotFoundException('Message not found');
+        }
+
+        return message;
+    }
+
 }
