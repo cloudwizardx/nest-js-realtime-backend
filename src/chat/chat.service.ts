@@ -38,7 +38,7 @@ export class ChatService {
             lastMessage: content,
             conversationId: cId
         })
-        
+
         return savedMessage
     }
 
@@ -73,11 +73,44 @@ export class ChatService {
     getMessages = async (request: GetMessagesRequest) => {
         const messages = await this.messageModel.find({
             conversationId: request.conversationId
-        }).sort({timestamp: -1})
-        .skip((request.page - 1)*request.limit)
-        .limit(request.limit)
+        }).sort({ timestamp: -1 })
+            .skip((request.page - 1) * request.limit)
+            .limit(request.limit)
 
         return messages.reverse()
     }
 
+    getConversations = async (userId: string) => {
+        const conversations = await this.conversationModel.find({ userId })
+            .sort({ timestamp: -1 })
+
+        return conversations
+    }
+
+    getSpecificConversation = async (userId1: string, userId2: string) => {
+        const cId = this.generateConversationId(userId1, userId2)
+        const conversation = await this.conversationModel.findOne({ conversationId: cId })
+        if (!conversation) {
+            return
+        }
+
+        const loadMessages = await this.messageModel.find({ conversationId: cId }).sort({ timestamp: -1 })
+
+        const messages = loadMessages.map(msg => ({
+            messageId: msg._id.toString(),
+            content: msg.content,
+            conversationId: msg.conversationId,
+            attachments: msg.attachments,
+        }))
+
+
+        return {
+            conversationId: conversation.conversationId,
+            lastMessage: conversation.lastMessage,
+            lastMessageTime: conversation.lastMessageTime.toISOString(),
+            userId1: conversation.userId1,
+            userId2: conversation.userId2,
+            messages,
+        }
+    }
 }
