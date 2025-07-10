@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './chat.schema';
 import { Model } from 'mongoose';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SendMessageRequest, UpdateConversationRequest } from './dto';
+import { GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';
 import { MessageStatus } from 'src/common/message.status';
 
 @Injectable()
@@ -56,18 +56,28 @@ export class ChatService {
                 lastMessageTime: new Date()
             })
 
-            await conversation.save();
+            await conversation.save()
         } else {
             loadedConversation.lastMessage = lastMessage
             loadedConversation.lastMessageTime = new Date()
 
-            await loadedConversation.save();
+            await loadedConversation.save()
         }
     }
 
     generateConversationId = (userId1: string, userId2: string): string => {
         const sorted = [userId1, userId2].sort();
         return `${sorted[0]}_${sorted[1]}`;
+    }
+
+    getMessages = async (request: GetMessagesRequest) => {
+        const messages = await this.messageModel.find({
+            conversationId: request.conversationId
+        }).sort({timestamp: -1})
+        .skip((request.page - 1)*request.limit)
+        .limit(request.limit)
+
+        return messages.reverse()
     }
 
 }
