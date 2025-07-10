@@ -10,5 +10,7 @@ export class UpdateConversationRequest {
 
     senderRole: string
 
+    receiverRole: string
+
     lastMessage: string
 }

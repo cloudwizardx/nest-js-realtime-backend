@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './chat.schema';
@@ -15,7 +16,7 @@ export class ChatService {
     ) { }
 
     sendMessage = async (senderId: string, senderRole: string, messageRequest: SendMessageRequest) => {
-        const { receiverId, content } = messageRequest
+        const { receiverId, content, receiverRole } = messageRequest
 
         const cId: string = this.generateConversationId(senderId, receiverId)
 
@@ -36,32 +37,42 @@ export class ChatService {
             senderRole: senderRole,
             receiverId: receiverId,
             lastMessage: content,
-            conversationId: cId
+            conversationId: cId,
+            receiverRole: receiverRole
         })
 
         return savedMessage
     }
 
     private async updateConversation(messageRequest: UpdateConversationRequest) {
-        const { conversationId, lastMessage, senderId, receiverId } = messageRequest
+        const { conversationId, lastMessage, senderId, receiverId } = messageRequest;
 
-        const loadedConversation = await this.conversationModel.findOne({ conversationId })
+        const loadedConversation = await this.conversationModel.findOne({ conversationId });
 
         if (!loadedConversation) {
             const conversation = new this.conversationModel({
-                conversationId: conversationId,
+                conversationId,
                 userId1: senderId,
                 userId2: receiverId,
-                lastMessage: lastMessage,
-                lastMessageTime: new Date()
-            })
+                lastMessage,
+                lastMessageTime: new Date(),
+                unreadCount: {
+                    [receiverId]: 1, 
+                },
+            });
 
-            await conversation.save()
+            await conversation.save();
         } else {
-            loadedConversation.lastMessage = lastMessage
-            loadedConversation.lastMessageTime = new Date()
+            const currentUnread = loadedConversation.unreadCount?.[receiverId] || 0;
 
-            await loadedConversation.save()
+            loadedConversation.lastMessage = lastMessage;
+            loadedConversation.lastMessageTime = new Date();
+            loadedConversation.unreadCount = {
+                ...loadedConversation.unreadCount,
+                [receiverId]: currentUnread + 1,
+            };
+
+            await loadedConversation.save();
         }
     }
 
@@ -144,9 +155,9 @@ export class ChatService {
             where: { userId },
         })
 
-        if(existingUser) {
+        if (existingUser) {
             await this.prismaService.user.update({
-                where: {userId},
+                where: { userId },
                 data: {
                     isOnline: isOnline,
                     lastSeen: new Date()
@@ -156,7 +167,5 @@ export class ChatService {
             throw new NotFoundException("User not found!")
         }
     }
-
-
 
 }

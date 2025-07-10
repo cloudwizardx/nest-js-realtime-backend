@@ -1,6 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { Attachment } from '../chat.schema';
-import { Type } from "class-transformer";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class SendMessageRequest {
     @IsString()
@@ -9,11 +7,13 @@ export class SendMessageRequest {
 
     @IsString()
     @IsNotEmpty()
+    receiverRole: string
+
+    @IsString()
+    @IsNotEmpty()
     content: string
 
-
+    @IsString()
     @IsOptional()
-    @IsArray()
-    @Type(() => Attachment)
-    attachments?: Attachment[] 
+    tempId?: string
 }
