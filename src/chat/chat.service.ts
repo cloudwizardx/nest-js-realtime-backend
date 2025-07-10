@@ -128,4 +128,17 @@ export class ChatService {
         return message;
     }
 
+    getUserOnlineStatus = async (userId: string) => {
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                userId: userId
+            },
+            select: {isOnline: true, lastSeen: true}
+        })
+
+        return user
+    }
+
+    
+
 }
