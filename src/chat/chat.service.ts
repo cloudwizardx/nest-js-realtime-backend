@@ -117,7 +117,7 @@ export class ChatService {
     updateMessageStatus = async (messageId: string, status: string) => {
         const message = await this.messageModel.findByIdAndUpdate(
             messageId,
-            { status }, 
+            { status },
             { new: true } // return document after update
         );
 
@@ -133,12 +133,30 @@ export class ChatService {
             where: {
                 userId: userId
             },
-            select: {isOnline: true, lastSeen: true}
+            select: { isOnline: true, lastSeen: true }
         })
 
         return user
     }
 
-    
+    updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
+        const existingUser = await this.prismaService.user.findUnique({
+            where: { userId },
+        })
+
+        if(existingUser) {
+            await this.prismaService.user.update({
+                where: {userId},
+                data: {
+                    isOnline: isOnline,
+                    lastSeen: new Date()
+                }
+            })
+        } else {
+            throw new NotFoundException("User not found!")
+        }
+    }
+
+
 
 }
