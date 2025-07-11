@@ -86,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return { success: true }
         } catch (error) {
             console.log(error)
-            return {success: false}
+            return { success: false }
         }
     }
 
@@ -100,8 +100,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return { success: true }
         } catch (error) {
             console.log(error)
-            return {success: false}
+            return { success: false }
         }
+    }
+
+    @SubscribeMessage('typing')
+    handleTyping(
+        @MessageBody() data: { conversationId: string, isTyping: boolean },
+        @ConnectedSocket() client: Socket,
+        @CurrentUser() user: any,
+    ) {
+        client.to(data.conversationId).emit('userTyping', {
+            userId: user.userId,
+            isTyping: data.isTyping
+        });
     }
 
 }
