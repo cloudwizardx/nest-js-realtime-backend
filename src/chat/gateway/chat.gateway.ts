@@ -90,4 +90,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
+    @SubscribeMessage('leaveConversation')
+    handleLeaveConversation(@MessageBody() request: { conversationId: string },
+        @ConnectedSocket() client: Socket,
+        @CurrentUser() user: any) {
+        try {
+            client.leave(request.conversationId)
+            console.log(`User ${user.userId} leave conversation ${request.conversationId}`)
+            return { success: true }
+        } catch (error) {
+            console.log(error)
+            return {success: false}
+        }
+    }
+
 }
