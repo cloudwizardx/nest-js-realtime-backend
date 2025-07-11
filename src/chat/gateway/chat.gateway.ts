@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { UseGuards } from "@nestjs/common";
-import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { WsAuthGuard } from "src/common";
 import { ChatService } from "../chat.service";
+import { SendMessageRequest } from "../dto";
+import { CurrentUser, WsAuthGuard } from "src/common";
 
 
 @WebSocketGateway({
@@ -52,6 +53,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         } catch (error) {
             console.log(error)
             client.disconnect()
+        }
+    }
+
+    @SubscribeMessage('sendMessage')
+    async handleSendMessage(@MessageBody() messageRequest: SendMessageRequest,
+        @ConnectedSocket() client: Socket,
+        @CurrentUser() user: any) {
+        try {
+            const message = await this.chatService.sendMessage(user.userId, user.role, messageRequest)
+            client.emit('messageReceived', message)
+            const receiverSocket = this.connectedUsers.get(messageRequest.receiverId)
+            if (receiverSocket) {
+                this.server.to(receiverSocket).emit('newMessage', message)
+            }
+
+            this.server.to(`user_${messageRequest.receiverId}`).emit('newMessage', message)
+            return { success: true, message };
+        } catch (error) {
+            console.log(error)
+            client.emit('error', { message: 'Failed to send message', error: error.message });
+            return { success: false, error: error.message };
         }
     }
 
