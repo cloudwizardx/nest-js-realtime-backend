@@ -116,4 +116,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
     }
 
+    @SubscribeMessage('getOnlineStatus')
+    async handleGetOnlineStatus(
+        @MessageBody() data: { userId: string },
+        @ConnectedSocket() client: Socket,
+    ) {
+        const status = await this.chatService.getUserOnlineStatus(data.userId);
+        client.emit('onlineStatus', { userId: data.userId, ...status });
+    }
 }
