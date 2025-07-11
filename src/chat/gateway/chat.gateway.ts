@@ -8,7 +8,6 @@ import { ChatService } from "../chat.service";
 import { SendMessageRequest } from "../dto";
 import { CurrentUser, WsAuthGuard } from "src/common";
 
-
 @WebSocketGateway({
     cors: {
         origin: '*',
@@ -74,6 +73,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             console.log(error)
             client.emit('error', { message: 'Failed to send message', error: error.message });
             return { success: false, error: error.message };
+        }
+    }
+
+    @SubscribeMessage('joinConversation')
+    handleJoinConversation(@MessageBody() request: { conversationId: string },
+        @ConnectedSocket() client: Socket,
+        @CurrentUser() user: any) {
+        try {
+            client.join(request.conversationId)
+            console.log(`User ${user.userId} joined conversation ${request.conversationId}`)
+            return { success: true }
+        } catch (error) {
+            console.log(error)
+            return {success: false}
         }
     }
 
