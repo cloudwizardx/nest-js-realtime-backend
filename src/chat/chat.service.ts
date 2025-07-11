@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Conversation, Message } from './chat.schema';
+import { Conversation, Message } from './schema/chat.schema';
 import { Model } from 'mongoose';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';

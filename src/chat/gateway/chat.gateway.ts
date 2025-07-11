@@ -6,7 +6,8 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { Server, Socket } from "socket.io";
 import { ChatService } from "../chat.service";
 import { SendMessageRequest } from "../dto";
-import { CurrentUser, WsAuthGuard } from "src/common";
+import { CurrentUser } from "src/common";
+import { WsAuthGuard } from "src/common/guard/ws.auth.guard";
 
 @WebSocketGateway({
     cors: {

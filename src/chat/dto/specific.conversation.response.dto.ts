@@ -1,4 +1,4 @@
-import { Attachment } from "../chat.schema"
+import { Attachment } from "../schema/chat.schema"
 
 interface MessagesResponse {
     messageId: string

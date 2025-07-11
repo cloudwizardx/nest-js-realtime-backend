@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Conversation, ConversationSchema, Message, MessageSchema } from './chat.schema';
+import { Conversation, ConversationSchema, Message, MessageSchema } from './schema/chat.schema';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
