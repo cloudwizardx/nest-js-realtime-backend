@@ -17,7 +17,9 @@ export class ChatController {
     }
 
     @Get('specific-conversation')
-    async geet
+    async getSpecificConversation(@CurrentUser() user: any, userId2: string) {
+        return this.chatService.getSpecificConversation(user.userId, userId2)
+    }
 
 
 
