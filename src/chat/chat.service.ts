@@ -3,20 +3,22 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './schema/chat.schema';
 import { Model } from 'mongoose';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';
-import { MessageStatus } from 'src/common/message.status';
+import { MessageStatus } from '../common/message.status';
+import { CloudService } from '../cloud/cloud.service';
 
 @Injectable()
 export class ChatService {
     constructor(
         @InjectModel(Message.name) private messageModel: Model<Message>,
         @InjectModel(Conversation.name) private conversationModel: Model<Conversation>,
+        private cloudService: CloudService,
         private prismaService: PrismaService
     ) { }
 
     sendMessage = async (senderId: string, senderRole: string, messageRequest: SendMessageRequest) => {
-        const { receiverId, content, receiverRole } = messageRequest
+        const { receiverId, content, receiverRole, attachments } = messageRequest
 
         const cId: string = this.generateConversationId(senderId, receiverId)
 
@@ -41,7 +43,36 @@ export class ChatService {
             receiverRole: receiverRole
         })
 
-        return savedMessage
+        if (attachments?.length) {
+            const uploadedAttachments: { url: string; type: string; filename: string }[] = [];
+            for (const file of attachments) {
+                const uploadedResult = await this.cloudService.uploadFile(file.base64, 'chat_resources')
+
+                uploadedAttachments.push({
+                    url: uploadedResult.secure_url,
+                    type: uploadedResult.resource_type,
+                    filename: uploadedResult.original_filename
+                })
+            }
+
+            const updatedMessage = await this.messageModel.findByIdAndUpdate(
+                savedMessage._id,
+                {
+                    status: MessageStatus.Sent,
+                    attachments: uploadedAttachments,
+                },
+                { new: true }, // return updated document
+            );
+            return updatedMessage;
+        }
+
+        const finalMessage = await this.messageModel.findByIdAndUpdate(
+            savedMessage._id,
+            { status: MessageStatus.Sent },
+            { new: true },
+        );
+
+        return finalMessage;
     }
 
     private async updateConversation(messageRequest: UpdateConversationRequest) {
@@ -57,7 +88,7 @@ export class ChatService {
                 lastMessage,
                 lastMessageTime: new Date(),
                 unreadCount: {
-                    [receiverId]: 1, 
+                    [receiverId]: 1,
                 },
             });
 

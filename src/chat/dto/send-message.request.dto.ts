@@ -13,7 +13,12 @@ export class SendMessageRequest {
     @IsNotEmpty()
     content: string
 
-    @IsString()
     @IsOptional()
-    tempId?: string
+    attachments?: {
+        filename: string;
+        type: string;
+        base64: string;
+    }[];
+
 }
+
