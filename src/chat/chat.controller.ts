@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guard';
 import { ChatService } from './chat.service';
 import { CurrentUser } from 'src/common';
@@ -17,7 +17,7 @@ export class ChatController {
     }
 
     @Get('specific-conversation')
-    async getSpecificConversation(@CurrentUser() user: any, userId2: string) {
+    async getSpecificConversation(@CurrentUser() user: any, @Query('userId2') userId2: string) {
         return this.chatService.getSpecificConversation(user.userId, userId2)
     }
 
