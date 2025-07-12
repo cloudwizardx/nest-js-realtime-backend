@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
+import { Socket, DefaultEventsMap } from 'socket.io';
 import { SignalingStatus } from 'src/common';
 
 interface CallSession {
