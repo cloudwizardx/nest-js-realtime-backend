@@ -26,8 +26,9 @@ export class ChatController {
         @Param('conversationId') conversationId: string,
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 10,
+        @CurrentUser() user
     ) {
-        return this.chatService.getMessages({conversationId, page, limit});
+        return this.chatService.getMessages({conversationId, page, limit}, user.userId, user.role+"");
     }
 
     @Get('conversations-sides/:currentUserId')
