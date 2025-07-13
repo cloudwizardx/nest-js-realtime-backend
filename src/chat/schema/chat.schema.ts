@@ -23,6 +23,9 @@ export class Message extends Document {
     @Prop({ required: true, enum: ['Doctor', 'User', 'Manager', 'Admin'] })
     senderRole: string
 
+    @Prop({ required: true, enum: ['Doctor', 'User', 'Manager', 'Admin'] })
+    receiverRole: string;
+
     @Prop({ required: true })
     content: string
 

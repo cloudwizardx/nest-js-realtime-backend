@@ -25,7 +25,7 @@ export class ChatController {
     async getMessages(
         @Param('conversationId') conversationId: string,
         @Query('page') page: number = 1,
-        @Query('limit') limit: number = 50,
+        @Query('limit') limit: number = 10,
     ) {
         return this.chatService.getMessages({conversationId, page, limit});
     }

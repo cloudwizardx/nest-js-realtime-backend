@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConversationSideResponse, GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';
 import { MessageStatus } from '../common/message.status';
 import { CloudService } from '../cloud/cloud.service';
+import { MessageSideResponse } from './dto/message.side.response';
 
 @Injectable()
 export class ChatService {
@@ -151,15 +152,58 @@ export class ChatService {
         return `${sorted[0]}_${sorted[1]}`;
     }
 
-    getMessages = async (request: GetMessagesRequest) => {
-        const messages = await this.messageModel.find({
-            conversationId: request.conversationId
-        }).sort({ timestamp: -1 })
-            .skip((request.page - 1) * request.limit)
-            .limit(request.limit)
+    async getMessages(request: GetMessagesRequest, currentUserId: string, currentUserRole: string): Promise<MessageSideResponse[]> {
+        const { conversationId, page, limit } = request;
 
-        return messages.reverse()
+        const messages = await this.messageModel.find({ conversationId })
+            .sort({ timestamp: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        const userIdsToLookup = new Set<string>();
+        messages.forEach(msg => {
+            const isCurrentSender = msg.senderId === currentUserId;
+            const receiverId = isCurrentSender ? msg.receiverId : msg.senderId;
+            userIdsToLookup.add(receiverId);
+        });
+
+        const users = await this.prismaService.user.findMany({
+            where: {
+                userId: {
+                    in: [...userIdsToLookup],
+                },
+            },
+            select: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+            },
+        });
+
+        const userMap = new Map(users.map(u => [u.userId, `${u.firstName} ${u.lastName}`]));
+
+        const messageResponses: MessageSideResponse[] = messages.map(msg => {
+            const isCurrentSender = msg.senderId === currentUserId;
+            const receiverId = isCurrentSender ? msg.receiverId : msg.senderId;
+            const receiverRole = isCurrentSender ? msg.receiverRole : msg.senderRole;
+
+            return {
+                _id: msg._id.toString(),
+                content: msg.content,
+                receiverId,
+                receiverRole,
+                currentUserId,
+                currentUserRole,
+                receiverName: userMap.get(receiverId) || "Unknown",
+                timestamp: msg.timestamp.toISOString(),
+                status: msg.status,
+                attachments: msg.attachments,
+            };
+        });
+
+        return messageResponses.reverse();
     }
+
 
     getConversations = async (userId: string) => {
         const conversations = await this.conversationModel.find({ userId })
