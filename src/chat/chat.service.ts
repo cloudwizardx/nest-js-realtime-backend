@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Conversation, Message } from './schema/chat.schema';
 import { Model } from 'mongoose';
 import { PrismaService } from '../prisma/prisma.service';
-import { GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';
+import { ConversationSideResponse, GetMessagesRequest, SendMessageRequest, UpdateConversationRequest } from './dto';
 import { MessageStatus } from '../common/message.status';
 import { CloudService } from '../cloud/cloud.service';
 
@@ -74,6 +75,45 @@ export class ChatService {
 
         return finalMessage;
     }
+
+
+    async getConversationsSide(currentUserId: string): Promise<ConversationSideResponse[]> {
+        const conversations = await this.conversationModel.find({
+            $or: [{ userId1: currentUserId }, { userId2: currentUserId }],
+        });
+
+        const results: ConversationSideResponse[] = [];
+
+        for (const conv of conversations) {
+            const isUser1 = conv.userId1 === currentUserId;
+            const receiverId = isUser1 ? conv.userId2 : conv.userId1;
+            const receiverRole = isUser1 ? conv.role2 : conv.role1;
+            const unreadCount = conv.unreadCount?.[receiverId] || 0;
+
+            // Lấy thông tin user từ MongoDB qua Prisma
+            const receiver = await this.prismaService.user.findUnique({
+                where: { userId: receiverId },
+            });
+
+            if (!receiver) continue;
+
+            results.push({
+                id: conv.conversationId,
+                receiverId,
+                receiverFirstName: receiver.firstName,
+                receiverLastName: receiver.lastName,
+                receiverRole: receiver.role,
+                avatar: receiver.avatarUrl || '',
+                lastMessage: conv.lastMessage,
+                lastTime: conv.lastMessageTime?.toISOString(),
+                unreadCount,
+                isOnline: receiver.isOnline,
+            });
+        }
+
+        return results;
+    }
+
 
     private async updateConversation(messageRequest: UpdateConversationRequest) {
         const { conversationId, lastMessage, senderId, receiverId } = messageRequest;

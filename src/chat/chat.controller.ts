@@ -30,4 +30,11 @@ export class ChatController {
         return this.chatService.getMessages({conversationId, page, limit});
     }
 
+    @Get('conversations-sides/:currentUserId')
+    async getConversationsSide (
+        @Param('currentUserId') currentUserId: string
+    ) {
+        
+    }
+
 }
