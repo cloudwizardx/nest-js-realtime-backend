@@ -34,7 +34,7 @@ export class ChatController {
     async getConversationsSide (
         @Param('currentUserId') currentUserId: string
     ) {
-        
+        return this.chatService.getConversationsSide(currentUserId)
     }
 
 }

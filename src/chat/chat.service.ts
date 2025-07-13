@@ -90,7 +90,6 @@ export class ChatService {
             const receiverRole = isUser1 ? conv.role2 : conv.role1;
             const unreadCount = conv.unreadCount?.[receiverId] || 0;
 
-            // Lấy thông tin user từ MongoDB qua Prisma
             const receiver = await this.prismaService.user.findUnique({
                 where: { userId: receiverId },
             });
